@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Smart Waste Collection</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+  <main class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="{{ url_for('dashboard') }}">
+        <span class="brand-mark">↗</span>
+        <span>Better Tomorrow</span>
+      </a>
+      <div class="topbar-meta"><span class="pulse-dot"></span> Prototype dashboard <span class="divider"></span> Updated {{ dashboard.updated_at }}</div>
+    </header>
+
+    <section class="hero">
+      <div>
+        <p class="eyebrow">Smart Waste Collection Management System</p>
+        <h1>Know when to<br><em>put waste out.</em></h1>
+        <p class="hero-copy">A clearer view of household readiness and collection timing for your community.</p>
+      </div>
+      <div class="hero-badge"><span class="badge-icon">◷</span><div><strong>{{ dashboard.summary.status }}</strong><small>collection outlook</small></div></div>
+    </section>
+
+    <section class="stats-grid">
+      <article class="stat-card accent-blue"><span class="stat-label">Total houses</span><strong>{{ dashboard.summary.total_houses }}</strong><span class="stat-note">in this collection zone</span></article>
+      <article class="stat-card accent-green"><span class="stat-label">Waste ready</span><strong>{{ dashboard.summary.ready }}</strong><span class="stat-note">{{ ((dashboard.summary.ready / dashboard.summary.total_houses) * 100)|round|int }}% of households</span></article>
+      <article class="stat-card accent-orange"><span class="stat-label">Still waiting</span><strong>{{ dashboard.summary.waiting }}</strong><span class="stat-note">need to prepare waste</span></article>
+      <article class="stat-card accent-purple"><span class="stat-label">Predicted delay</span><strong>{{ dashboard.summary.predicted_delay }}<small> min</small></strong><span class="stat-note">estimated by Random Forest</span></article>
+    </section>
+
+    <section class="main-grid">
+      <article class="panel outlook-panel">
+        <div class="panel-heading"><div><p class="eyebrow">Today’s outlook</p><h2>Collection timing</h2></div><span class="status-pill {{ 'warning' if dashboard.summary.predicted_delay >= 20 else 'good' }}">{{ dashboard.summary.status }}</span></div>
+        <div class="time-display"><span>Expected collection</span><strong>{{ dashboard.summary.expected_collection }}</strong><p>Normal schedule <b>{{ dashboard.model.normal_time }}</b> <span class="arrow">→</span> estimated delay <b>+{{ dashboard.summary.predicted_delay }} min</b></p></div>
+        <div class="progress-wrap"><div class="progress-label"><span>Household readiness</span><b>{{ dashboard.summary.ready }} / {{ dashboard.summary.total_houses }}</b></div><div class="progress-track"><div class="progress-bar" style="width: {{ (dashboard.summary.ready / dashboard.summary.total_houses) * 100 }}%"></div></div></div>
+        <div class="tip"><span>✦</span><p><strong>Helpful reminder</strong><br>Prepare waste before the expected collection window to avoid missing the vehicle.</p></div>
+      </article>
+
+      <article class="panel model-panel"><div class="panel-heading"><div><p class="eyebrow">Prediction engine</p><h2>How this estimate works</h2></div><span class="model-icon">⌁</span></div><div class="model-flow"><span>CSV history</span><b>→</b><span>Features</span><b>→</b><span>Random Forest</span></div><p class="model-description">The prototype learns from {{ dashboard.model.training_records }} recorded collection days, using household readiness and collection timing to estimate a possible delay.</p><div class="model-footer"><span class="mini-dot"></span> Prototype estimate <span class="uncertainty">Not a guaranteed arrival time</span></div></article>
+    </section>
+
+    <section class="content-grid">
+      <article class="panel table-panel"><div class="panel-heading"><div><p class="eyebrow">Live readiness</p><h2>Household status</h2></div><span class="count-label">{{ dashboard.summary.ready }} ready</span></div><div class="table-wrap"><table><thead><tr><th>House</th><th>Status</th><th>Last updated</th></tr></thead><tbody>{% for house in dashboard.households %}<tr><td><strong>{{ house.house_id }}</strong></td><td><span class="house-status {{ house.status|lower }}"><i></i>{{ house.status }}</span></td><td>{{ house.last_updated }}</td></tr>{% endfor %}</tbody></table></div></article>
+      <article class="panel chart-panel"><div class="panel-heading"><div><p class="eyebrow">Historical view</p><h2>Collection delays</h2></div><span class="legend"><i></i> delay minutes</span></div><div class="chart-area"><div class="y-axis"><span>120</span><span>80</span><span>40</span><span>0</span></div><div class="bars">{% for day in dashboard.history %}<div class="bar-group"><div class="bar {{ 'missing' if day.delay_minutes is none else '' }}" style="height: {{ ((day.delay_minutes or 0) / 120 * 100)|round|int }}%" title="{{ day.day }}: {{ day.delay_minutes if day.delay_minutes is not none else 'Not recorded' }} min"></div><span>{{ day.day }}</span></div>{% endfor %}</div></div><p class="chart-note">Delays are measured against the normal 08:30 AM collection time.</p></article>
+    </section>
+
+    <footer><span>Project Better Tomorrow · Pathway A</span><span>Small dataset prototype · For demonstration only</span></footer>
+  </main>
+</body>
+</html>

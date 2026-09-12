@@ -1,0 +1,13 @@
+house_id,status,last_updated
+H1,Ready,08:02
+H2,Ready,08:04
+H3,Waiting,08:05
+H4,Ready,08:06
+H5,Ready,08:07
+H6,Waiting,08:08
+H7,Ready,08:09
+H8,Ready,08:10
+H9,Waiting,08:11
+H10,Ready,08:12
+H11,Ready,08:13
+H12,Ready,08:14
