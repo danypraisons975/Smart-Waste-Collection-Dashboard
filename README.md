@@ -1,115 +1,322 @@
-# Smart Waste Collection Management System
+# ♻️ Smart Waste Collection Management System
 
-A Flask-based academic dashboard for understanding household waste readiness and estimating collection delay. The project addresses a practical situation in which a truck that previously arrived around 08:30 may arrive irregularly, while residents need to decide when to place waste outside.
+> An intelligent, data-driven system designed to improve municipal waste collection by monitoring collection patterns, predicting delays, and helping optimize waste-collection operations.
 
-> **Scope statement:** This application is a dataset-based demonstration. It does not receive municipal truck GPS telemetry, does not make operational collection promises, and does not claim deployment or field-test accuracy.
+## 📌 Project Status
 
-## Problem and proposed solution
+**Current Development Progress: 35%**
 
-Twelve monitored houses may prepare waste at different times. When waste is left outside for too long, animals can scatter it, while residents who leave home early may miss the collection. The dashboard summarizes household readiness, displays recorded collection history, and uses a Random Forest regression model to estimate a possible delay for a selected readiness scenario.
+This project is currently in the **prototype and development stage**.
 
-## Features
+The initial version focuses on understanding waste-collection patterns, organizing collection data, developing a web-based dashboard, and exploring machine-learning-based delay prediction.
 
-The dashboard provides an overview of total, ready, and waiting houses; an estimated collection time; a delay/status category; an actual historical delay chart; a household-status table; a prediction form; a JSON dashboard endpoint; validation errors for missing or malformed data; and an honest model-evaluation panel when the data size permits it.
+The system is **not yet deployed for real-world municipal use**. Several components, including government approval, vehicle tracking, GPS integration, and large-scale field testing, are planned for future phases.
 
-## Technology stack
+---
 
-| Layer | Technology |
-|---|---|
-| Backend | Python 3.10+, Flask |
-| Data processing | pandas |
-| Machine learning | scikit-learn RandomForestRegressor |
-| Frontend | Jinja2 templates, semantic HTML, CSS, small vanilla JavaScript module |
-| Storage | CSV files |
-| Testing | pytest and Flask test client |
+## 🎯 Problem Statement
 
-## Architecture
+Traditional waste collection systems may operate on fixed schedules without considering variations in:
 
-The browser requests `/`, which loads the CSV files through `services/dashboard_service.py`. The service validates and transforms the data, trains the Random Forest model, computes the dashboard payload, and renders `templates/dashboard.html`. The same service powers `/api/dashboard` and `/api/predict`. No database or external telemetry service is required.
+* Collection vehicle arrival time
+* Number of houses waiting for collection
+* Daily collection patterns
+* Vehicle delays
+* Areas where waste is waiting for longer periods
 
-## Dataset and provenance
+These problems can result in residents leaving waste outside for extended periods, which may lead to issues such as stray animals scattering waste, unpleasant surroundings, and inefficient collection operations.
 
-The original `data/collection_history.csv` contains **12 supplied observations** labelled D1–D12. It is shown in the interface as **FIELD DATA — 12 supplied observations**. It records collection time, total houses, and houses ready. One collection time is missing, so **11 records have a usable observed delay**. `data/household_status.csv` contains the current supplied status of 12 houses.
+This project aims to develop a smarter system that uses **data and machine learning** to improve the efficiency and reliability of waste collection.
 
-`data/demo_collection_history.csv` contains exactly 31 reproducible synthetic rows created by `scripts/generate_demo_data.py`. The generator does not overwrite the original field file. These rows are shown in the interface as **DEMO DATA — 31 synthetic observations** and are for demonstration only and must not be described as field observations. To use them locally, set the environment variable `SWC_DATA_MODE=demo` before starting Flask. The default mode is the supplied field-tested observation file.
+---
 
-## Machine-learning methodology
+## 💡 Proposed Solution
 
-The target is `delay_minutes = actual_collection_time - 08:30`. The supplied dataset has a constant total of 12 houses, so houses waiting and readiness ratio are deterministic transformations of houses ready. To avoid presenting redundant columns as independent evidence, the final Random Forest uses `houses_ready` as its single independent model feature. Waiting houses and readiness ratio remain useful displayed context. Actual collection time and actual delay are never used as prediction inputs. Training uses `X = houses_ready` and `y = observed delay minutes`. Prediction uses the current user-provided readiness scenario. The Random Forest uses 200 trees and a fixed random seed for reproducibility. When there are at least ten usable observations, the service reports Random Forest MAE, RMSE, and R² using a chronological hold-out split: the first eight usable observations train the model and the final three test it. It compares Random Forest MAE with a historical-average-delay baseline calculated from the training period only and applied to the same future test rows. With the original 11 usable records, the evaluation is exploratory rather than evidence of strong accuracy. The dashboard always separates historical actual delay from the current model prediction.
+The proposed system collects and analyzes waste-collection data and provides useful information through a web-based dashboard.
 
-## Installation and running
+The system is intended to:
 
-From the project root:
+1. Record daily waste-collection information.
+2. Monitor collection times and patterns.
+3. Identify houses/areas waiting for collection.
+4. Predict possible collection delays.
+5. Provide useful information to collection operators.
+6. Eventually integrate real-time vehicle tracking.
+7. Support better route and schedule planning.
 
-```bash
-python -m venv .venv
-```
 
-Windows PowerShell:
+## Dashboard Preview
 
-```powershell
-.venv\Scripts\Activate.ps1
-```
+### Main Dashboard
 
-macOS/Linux:
+![Smart Waste Collection Dashboard - Main](Dashboard-main.png)
 
-```bash
-source .venv/bin/activate
-```
+### Prediction Interface
 
-Install and run:
+![Smart Waste Collection Dashboard - Prediction](Dashboard-prediction.png)
 
-```bash
-pip install -r requirements.txt
-python app.py
-```
+---
 
-Open `http://127.0.0.1:5000`. For the synthetic demonstration dataset:
+## 🛠️ Current Implementation
 
-```powershell
-$env:SWC_DATA_MODE="demo"; python app.py
-```
+The current prototype includes the following components:
 
-```bash
-SWC_DATA_MODE=demo python app.py
-```
+### ✅ Completed / In Progress
 
-## API examples
+* [x] Initial problem identification
+* [x] Data collection and dataset preparation
+* [x] Initial waste-collection dataset
+* [x] Basic data analysis
+* [x] Project architecture planning
+* [x] Machine-learning approach identified
+* [x] Initial Python implementation
+* [ ] Web dashboard refinement
+* [ ] Extended dataset
+* [ ] Machine-learning prediction refinement
+* [ ] Real-world testing
 
-`GET /api/dashboard` returns the complete dashboard payload. `POST /api/predict` accepts pre-collection JSON such as `{"houses_ready": 9}` and returns predicted delay, estimated collection time based on the normal 08:30 schedule, status, inputs, and a plain-language explanation. The endpoint deliberately does not accept actual collection time because that is the value being estimated.
+### 📊 Current Dataset
 
-## Testing
+The prototype currently uses a small sample dataset representing waste-collection activity across multiple houses and different collection times.
 
-Run the automated tests with:
+The dataset is being used for **prototype development and testing**.
 
-```bash
-pytest -q
-```
+As the project progresses, a larger and more representative dataset will be required for reliable machine-learning predictions.
 
-The suite covers page loading, dashboard JSON, the prediction endpoint, invalid inputs, and model metadata. Manual smoke checks should also include opening the page, submitting the prediction form, refreshing the dashboard, and running with `SWC_DATA_MODE=demo`.
+---
 
-## Project structure
+## 🤖 Machine Learning
+
+The proposed system uses machine learning to identify collection patterns and estimate possible delays.
+
+The current approach explores **Random Forest Regression** for predicting collection delays based on available historical data.
+
+Possible future input parameters include:
+
+* Previous collection time
+* Day of the week
+* Number of houses waiting
+* Historical delay
+* Vehicle location
+* Route information
+* Collection area
+* Weather conditions
+* Traffic conditions
+
+The machine-learning model will be improved as more real-world data becomes available.
+
+---
+
+## 🖥️ Technology Stack
+
+### Current
+
+* **Python**
+* **Pandas**
+* **Scikit-learn**
+* **Flask**
+* **HTML**
+* **CSS**
+* **JavaScript**
+* **CSV / Dataset**
+
+### Planned
+
+* GPS / GNSS
+* Vehicle tracking
+* Mapping APIs
+* Real-time database
+* Cloud infrastructure
+* Mobile interface
+* Advanced machine-learning models
+
+---
+
+# 🚧 Development Roadmap
+
+## Phase 1 — Prototype Development
+
+**Status: 🟢 In Progress**
+
+* Develop the basic data-processing system
+* Prepare the initial dataset
+* Build the web interface
+* Implement collection monitoring
+* Implement initial machine-learning model
+* Test the system using sample data
+
+**Progress: ~35%**
+
+---
+
+## Phase 2 — Extended Data Collection
+
+**Status: 🟡 Planned**
+
+The system will require a significantly larger dataset for reliable predictions.
+
+Planned activities include:
+
+* Collecting long-term collection data
+* Recording vehicle arrival times
+* Recording collection locations
+* Recording number of houses waiting
+* Recording route information
+* Identifying recurring delays
+* Improving dataset quality
+
+---
+
+## Phase 3 — Government / Municipal Approval
+
+**Status: ⚪ Future**
+
+Before real-world deployment, the project will require appropriate permission and coordination with the relevant **municipal/local government authorities and waste-management departments**.
+
+The objective will be to conduct a controlled pilot deployment rather than immediately deploying the system across an entire city.
+
+---
+
+## Phase 4 — GPS Vehicle Tracking
+
+**Status: ⚪ Future**
+
+Subject to approval and funding, GPS/GNSS tracking devices could be installed in waste-collection vehicles.
+
+The proposed system would allow authorized personnel to monitor:
+
+* Current vehicle location
+* Vehicle movement
+* Route progress
+* Collection areas covered
+* Approximate arrival time
+* Delays or deviations from planned routes
+
+This information could be integrated into the web dashboard.
+
+---
+
+## Phase 5 — Real-Time Monitoring
+
+**Status: ⚪ Future**
+
+Once GPS tracking and backend infrastructure are available, the system could provide real-time monitoring.
+
+Possible features:
+
+* 🗺️ Live vehicle location
+* 🚛 Vehicle status
+* 📍 Collection-area monitoring
+* ⏱️ Estimated arrival time
+* ⚠️ Delay alerts
+* 📊 Collection performance statistics
+
+---
+
+## Phase 6 — Intelligent Route Optimization
+
+**Status: ⚪ Future**
+
+With sufficient historical and real-time data, the system could eventually move beyond delay prediction and assist with route optimization.
+
+Possible factors:
+
+* Number of houses waiting
+* Vehicle location
+* Distance
+* Traffic
+* Collection priority
+* Historical collection time
+* Vehicle availability
+
+The objective would be to reduce unnecessary travel, waiting time, and missed collections.
+
+---
+
+# 🔮 Future Vision
+
+The long-term goal is to develop the prototype into a **real-world intelligent waste-management platform**.
+
+The proposed future system could work as follows:
 
 ```text
-.
-├── app.py
-├── requirements.txt
-├── README.md
-├── data/
-│   ├── collection_history.csv
-│   ├── household_status.csv
-│   └── demo_collection_history.csv
-├── scripts/generate_demo_data.py
-├── services/dashboard_service.py
-├── static/css/styles.css
-├── templates/dashboard.html
-└── test_dashboard.py
+Households
+    ↓
+Waste Collection Data
+    ↓
+Central System
+    ↓
+AI / Machine Learning
+    ↓
+Delay & Demand Prediction
+    ↓
+GPS Vehicle Tracking
+    ↓
+Real-Time Dashboard
+    ↓
+Better Collection Decisions
 ```
 
-## Field testing, limitations, and future work
+The system could eventually help municipalities make **data-driven decisions instead of relying entirely on fixed schedules**.
 
-The project context describes field testing with 12 houses, and the supplied CSV files are retained as the original observations. This repository does not include a separate field-test report, accuracy study, user study, or live vehicle feed; therefore no such results are claimed here. The main limitations are the small original dataset, one missing collection time, the absence of weather/traffic/route features, and the lack of live telemetry. Future improvements should collect more real observations, define a time-based evaluation protocol, compare against a historical-average baseline, add authenticated operational users, and integrate a real telemetry source only after its data quality and permissions are established.
+---
 
-## Presentation readiness
+# 📈 Current Progress
 
-The project is suitable for a faculty demonstration of a Flask dashboard, CSV data pipeline, validation behavior, and an explicitly limited Random Forest experiment. It should be presented as an academic prototype rather than a production municipal system. The most important presentation note is to distinguish the 12 supplied observations from the 31 synthetic demonstration rows.
+| Component              | Status         |
+| ---------------------- | -------------- |
+| Problem Identification | ✅ Completed    |
+| Solution Design        | ✅ Completed    |
+| Initial Dataset        | ✅ Completed    |
+| Data Analysis          | 🟢 In Progress |
+| Python Prototype       | 🟢 In Progress |
+| Web Dashboard          | 🟡 In Progress |
+| Machine Learning       | 🟡 In Progress |
+| Extended Dataset       | ⚪ Planned      |
+| GPS Integration        | ⚪ Planned      |
+| Real-Time Tracking     | ⚪ Planned      |
+| Government Approval    | ⚪ Future       |
+| Field Testing          | ⚪ Future       |
+| Full Deployment        | ⚪ Future       |
+
+### Overall Progress: **~35%**
+
+---
+
+# ⚠️ Current Limitations
+
+The current version is a **prototype**, and therefore has several limitations:
+
+* The available dataset is relatively small.
+* The data is not yet representative of a complete municipal waste-collection system.
+* Real-time GPS data is not currently integrated.
+* The system has not yet undergone large-scale field testing.
+* Machine-learning accuracy cannot be considered production-ready at this stage.
+* Government/municipal permissions are required before real-world deployment.
+* Actual deployment would require appropriate hardware, infrastructure, security, and maintenance.
+
+These limitations will be addressed progressively during future development.
+
+---
+
+# 🌱 Long-Term Goal
+
+The ultimate objective is to create a scalable waste-collection system that connects **households, collection vehicles, operators, municipal authorities, and AI-based analytics** into a single platform.
+
+The project will progressively move from:
+
+**Prototype → Data Collection → Pilot Testing → GPS Integration → Real-Time Monitoring → Intelligent Optimization**
+
+---
+
+# 👨‍💻 Project Development
+
+This project is being developed as an academic/prototype project to explore how **Artificial Intelligence, data analysis, and IoT/GPS technologies** can be applied to improve everyday municipal services.
+
+The current implementation should be considered a **proof of concept**, with real-world deployment planned only after sufficient testing, validation, and appropriate authorization.
+
+---
+
+## 📜 License
+
+This project is currently developed for educational and prototype purposes.
